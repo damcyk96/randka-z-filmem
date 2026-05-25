@@ -16,20 +16,32 @@ export default function HistoryPage() {
   }, [])
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 px-4 py-10">
+    <main className="min-h-screen px-4 py-10" style={{ background: '#0a0a0f' }}>
       <div className="max-w-2xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-end justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Historia</h1>
-            <p className="text-gray-500 text-sm mt-1">Filmy które postanowiłeś obejrzeć</p>
+            <h1 className="text-3xl font-bold tracking-tight" style={{ color: '#fff' }}>
+              Watch History
+            </h1>
+            <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>
+              Movies you decided to watch
+            </p>
           </div>
-          <Link href="/" className="text-sm text-indigo-600 hover:underline font-medium">
-            ← Losuj
+          <Link
+            href="/"
+            className="text-sm font-medium transition-colors"
+            style={{ color: 'rgba(255,255,255,0.4)' }}
+            onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
+            onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.4)')}
+          >
+            ← Roll
           </Link>
         </div>
 
         {isLoading ? (
-          <div className="text-center py-16 text-gray-400 animate-pulse">Ładuję...</div>
+          <div className="text-center py-20 text-sm animate-pulse" style={{ color: 'rgba(255,255,255,0.3)' }}>
+            Loading...
+          </div>
         ) : (
           <HistoryList movies={movies} />
         )}

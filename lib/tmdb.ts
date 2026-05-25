@@ -17,6 +17,7 @@ export interface Movie {
   tmdbId: number
   title: string
   posterUrl: string | null
+  backdropUrl: string | null
   genres: string[]
   runtime: number | null
   overview: string
@@ -66,6 +67,7 @@ export async function getRandomMovie(genreId?: number, maxRuntime = 180): Promis
     tmdbId: detail.id,
     title: detail.title,
     posterUrl: detail.poster_path ? `https://image.tmdb.org/t/p/w500${detail.poster_path}` : null,
+    backdropUrl: detail.backdrop_path ? `https://image.tmdb.org/t/p/w1280${detail.backdrop_path}` : null,
     genres: (detail.genres ?? []).map((g: Genre) => g.name),
     runtime: detail.runtime ?? null,
     overview: detail.overview ?? '',
