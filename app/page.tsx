@@ -18,14 +18,11 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    fetch('/api/movie/random')
-      .then((r) => r.json())
-      .then(setMovie)
-      .catch(() => setError('Nie udało się załadować filmu'))
-    fetch('/api/genres')
-      .then((r) => r.json())
-      .then(setGenres)
-      .catch(() => {})
+    setIsLoading(true)
+    Promise.all([
+      fetch('/api/genres').then(r => r.json()).then(setGenres).catch(() => {}),
+      fetch('/api/movie/random').then(r => r.json()).then(setMovie).catch(() => setError('Failed to load a movie')),
+    ]).finally(() => setIsLoading(false))
   }, [])
 
   const rollMovie = useCallback(async () => {
@@ -40,12 +37,12 @@ export default function Home() {
       const res = await fetch(`/api/movie/random?${params}`)
       if (!res.ok) {
         const data = await res.json()
-        setError(data.error ?? 'Błąd pobierania filmu')
+        setError(data.error ?? 'No results for these filters')
         return
       }
       setMovie(await res.json())
     } catch {
-      setError('Błąd połączenia')
+      setError('Connection error')
     } finally {
       setIsLoading(false)
     }
@@ -61,46 +58,76 @@ export default function Home() {
         body: JSON.stringify(movie),
       })
       setIsSaved(true)
-    } catch {
-      // cicho, nie blokujemy UX
     } finally {
       setIsSaving(false)
     }
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 px-4 py-10">
+    <main className="min-h-screen px-4 py-10" style={{ background: '#0a0a0f' }}>
       <div className="max-w-2xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
+
+        {/* Header */}
+        <div className="flex items-end justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Randka z filmem</h1>
-            <p className="text-gray-500 text-sm mt-1">Nie wiesz co oglądać? My wybierzemy za Ciebie.</p>
+            <h1 className="text-3xl font-bold tracking-tight" style={{ color: '#fff' }}>
+              Movie Night
+            </h1>
+            <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>
+              Can't decide what to watch? Let us pick.
+            </p>
           </div>
           <Link
             href="/history"
-            className="text-sm text-indigo-600 hover:underline font-medium"
+            className="text-sm font-medium transition-colors"
+            style={{ color: 'rgba(255,255,255,0.4)' }}
+            onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
+            onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.4)')}
           >
-            Historia →
+            History →
           </Link>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm p-5 space-y-4">
+        {/* Filters */}
+        <div
+          className="rounded-2xl p-5 space-y-4"
+          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+        >
           <div>
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Gatunek</p>
+            <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: 'rgba(255,255,255,0.3)' }}>
+              Genre
+            </p>
             <GenrePicker genres={genres} selected={selectedGenre} onChange={setSelectedGenre} />
           </div>
-          <RuntimeSlider value={maxRuntime} onChange={setMaxRuntime} />
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '1rem' }}>
+            <RuntimeSlider value={maxRuntime} onChange={setMaxRuntime} />
+          </div>
           <button
             onClick={rollMovie}
             disabled={isLoading}
-            className="w-full py-2.5 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 disabled:opacity-60 transition-colors"
+            className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
+            style={{
+              background: isLoading ? 'rgba(99,102,241,0.4)' : 'rgba(99,102,241,0.9)',
+              color: '#fff',
+              border: '1px solid rgba(99,102,241,0.4)',
+            }}
           >
-            {isLoading ? 'Szukam...' : 'Losuj film'}
+            {isLoading ? 'Finding a movie...' : 'Roll'}
           </button>
         </div>
 
         {error && (
-          <p className="text-center text-red-500 text-sm">{error}</p>
+          <p className="text-center text-sm" style={{ color: 'rgba(248,113,113,0.8)' }}>{error}</p>
+        )}
+
+        {/* Movie card */}
+        {isLoading && (
+          <div
+            className="rounded-2xl h-64 flex items-center justify-center text-sm animate-pulse"
+            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.3)' }}
+          >
+            Finding the perfect movie...
+          </div>
         )}
 
         {movie && !isLoading && (
@@ -111,12 +138,6 @@ export default function Home() {
             isSaving={isSaving}
             isSaved={isSaved}
           />
-        )}
-
-        {isLoading && (
-          <div className="bg-white rounded-2xl shadow-lg h-64 flex items-center justify-center text-gray-400 animate-pulse">
-            Szukam idealnego filmu...
-          </div>
         )}
       </div>
     </main>
