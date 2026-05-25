@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import Link from 'next/link'
 import { MovieCard } from '@/components/MovieCard'
 import { GenrePicker } from '@/components/GenrePicker'
 import { RuntimeSlider } from '@/components/RuntimeSlider'
+import { Navbar } from '@/components/Navbar'
 import { Genre, Movie } from '@/lib/tmdb'
 
 export default function Home() {
@@ -67,26 +67,7 @@ export default function Home() {
     <main className="min-h-screen px-4 py-10" style={{ background: '#0a0a0f' }}>
       <div className="max-w-2xl mx-auto space-y-6">
 
-        {/* Header */}
-        <div className="flex items-end justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight" style={{ color: '#fff' }}>
-              Movie Night
-            </h1>
-            <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>
-              Can't decide what to watch? Let us pick.
-            </p>
-          </div>
-          <Link
-            href="/history"
-            className="text-sm font-medium transition-colors"
-            style={{ color: 'rgba(255,255,255,0.4)' }}
-            onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
-            onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.4)')}
-          >
-            History →
-          </Link>
-        </div>
+        <Navbar />
 
         {/* Filters */}
         <div

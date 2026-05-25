@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { watchedMovies } from '@/drizzle/schema'
-import { getOrCreateSessionId } from '@/lib/session'
+import { auth } from '@/lib/auth'
 import { nanoid } from 'nanoid'
 
 export async function POST(req: NextRequest) {
@@ -9,12 +9,23 @@ export async function POST(req: NextRequest) {
   const { tmdbId, title, posterUrl, genres, runtime, overview, voteAverage } = body
 
   if (!tmdbId || !title) {
-    return NextResponse.json({ error: 'Brak wymaganych pól' }, { status: 400 })
+    return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
   }
 
-  let sessionId = req.cookies.get('session_id')?.value
-  const isNew = !sessionId
-  if (!sessionId) sessionId = nanoid()
+  // Try Better Auth session first, fall back to cookie session
+  const session = await auth.api.getSession({ headers: req.headers })
+  let sessionId: string
+  let isNew = false
+
+  if (session?.user?.id) {
+    sessionId = session.user.id
+  } else {
+    sessionId = req.cookies.get('session_id')?.value ?? ''
+    if (!sessionId) {
+      sessionId = nanoid()
+      isNew = true
+    }
+  }
 
   await db.insert(watchedMovies).values({
     sessionId,
@@ -34,11 +45,11 @@ export async function POST(req: NextRequest) {
       await resend.emails.send({
         from: process.env.RESEND_FROM ?? 'randka@resend.dev',
         to: process.env.NOTIFY_EMAIL ?? '',
-        subject: `Dziś oglądasz: ${title}`,
-        html: `<p>Miłego seansu! <strong>${title}</strong>${runtime ? ` — ${runtime} min` : ''}</p>`,
+        subject: `Tonight's pick: ${title}`,
+        html: `<p>Enjoy the movie! <strong>${title}</strong>${runtime ? ` — ${runtime} min` : ''}</p>`,
       })
     } catch {
-      // email opcjonalny, ignorujemy błędy
+      // email is optional
     }
   }
 
